@@ -1,11 +1,14 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+)
 
 type Building struct {
-    ID        uint   `gorm:"primaryKey"`
-    Name      string `gorm:"not null"`
-    City      string `gorm:"not null"`
-    YearBuilt int    `gorm:"not null"`
-    Floors    int    `gorm:"not null"`
+	ID         int       `json:"id"`
+	Name       string    `json:"name"`
+	City       string    `json:"city"`
+	YearBuilt  int       `json:"year_built"`
+	Floors     int       `json:"floors"`
+	CreateTime time.Time `json:"created_at"`
 }

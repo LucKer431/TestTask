@@ -1,62 +1,38 @@
 package main
 
 import (
-    "github.com/gin-gonic/gin"
-    "github.com/swaggo/gin-swagger"
-    "github.com/swaggo/gin-swagger/swaggerFiles"
-    "github.com/swaggo/swag/example/celler/httputil"
-    "log"
-    "your-project-name/db"
-    "your-project-name/models"
+	"TestTask/config"
+	"TestTask/controllers"
+	"TestTask/repository"
+
+	//"database/sql"
+	"log"
+
+	"github.com/gin-gonic/gin"
+	"github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 func main() {
-    db.InitDB()
-    r := gin.Default()
+	cfg, err := config.LoadConfig("config/config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    // Swagger UI
-    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-    r.POST("/api/v1/buildings", createBuilding)
-    r.GET("/api/v1/buildings", getBuildings)
+	db, err := config.NewDBConnection(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    log.Fatal(r.Run(":8080"))
-}
+	repo := repository.NewBuildingRepository(db)
+	controller := controllers.NewBuildingController(repo)
 
-func createBuilding(c *gin.Context) {
-    var building models.Building
-    if err := c.BindJSON(&building); err != nil {
-        httputil.NewError(c, http.StatusBadRequest, err)
-        return
-    }
-    result := db.DB.Create(&building)
-    if result.Error != nil {
-        httputil.NewError(c, http.StatusInternalServerError, result.Error)
-        return
-    }
-    c.JSON(http.StatusCreated, building)
-}
+	r := gin.Default()
 
-func getBuildings(c *gin.Context) {
-    var buildings []models.Building
-    city := c.Query("city")
-    yearBuilt := c.Query("yearBuilt")
-    floors := c.Query("floors")
+	r.POST("/api/v1/buildings", controller.CreateBuilding)
+	r.GET("/api/v1/buildings", controller.GetBuildings)
 
-    query := db.DB.Model(&models.Building{})
-    if city != "" {
-        query = query.Where("city = ?", city)
-    }
-    if yearBuilt != "" {
-        query = query.Where("year_built = ?", yearBuilt)
-    }
-    if floors != "" {
-        query = query.Where("floors = ?", floors)
-    }
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-    result := query.Find(&buildings)
-    if result.Error != nil {
-        httputil.NewError(c, http.StatusInternalServerError, result.Error)
-        return
-    }
-    c.JSON(http.StatusOK, buildings)
+	r.Run(":8080")
 }
