@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -17,16 +19,20 @@ type Config struct {
 	DB       string `json:"db"`
 }
 
-func LoadConfig(path string) (*Config, error) {
-	var cfg Config
-	data, err := os.ReadFile(path)
+func LoadConfig() (*Config, error) {
+	err := godotenv.Load()
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return nil, err
+
+	cfg := Config{
+		Host:     os.Getenv("HOST"),
+		Port:     os.Getenv("PORT"),
+		User:     os.Getenv("USER"),
+		Password: os.Getenv("PASSWORD"),
+		DB:       os.Getenv("DB"),
 	}
+
 	return &cfg, nil
 }
 

@@ -28,7 +28,7 @@ import (
 // @BasePath /api/v1
 
 func main() {
-	cfg, err := config.LoadConfig("config/config.json")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
